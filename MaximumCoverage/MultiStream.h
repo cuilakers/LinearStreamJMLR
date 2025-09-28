@@ -13,8 +13,7 @@ Result MultiStream(double B,double eps)
     //eps=0.2;
     long long int query=0;
     long long int memory=0;
-    //int h=3; WWW 2025 Setting
-    int h=5;
+    int h=2;
 
    pair<S_class, double> onepass_return = OneStreamForMulti(B, 0.1, h, query, memory);
    S_class M=onepass_return.first;
@@ -53,6 +52,7 @@ Result MultiStream(double B,double eps)
        // K=(pi*pi*(1+eps)*(double)onepass_i*(double)onepass_i)/(6.0*eps);
 
         query++;
+
         double fu_value=f_u(u);
         if(fu_value>S_best.s_revenue)
         {
@@ -65,7 +65,6 @@ Result MultiStream(double B,double eps)
 
         double right_temp=(1.0+1.0/(pow(2,h)-2.0)) * T_value / (eps * B );
 
-        query++;
         double right_temp_element=f_u(u)/Groundset[u].cost;
         right_temp=min(right_temp_element,right_temp);
 
@@ -144,6 +143,10 @@ Result MultiStream(double B,double eps)
         //foreach gamma\in C
         for(int iter=min_gamma_index_in_C;iter<=max_gamma_index_in_C;iter++)
         {
+            if (fu_value/Groundset[u].cost < S_array[iter].gamma)
+                continue;
+
+
             int max_solution=0;
             // double max_marginal=-999.0;
             // for (int x = 0; x < solution_num; ++x) {
@@ -177,6 +180,10 @@ Result MultiStream(double B,double eps)
         //foreach S^gamma
         for(int iter=min_gamma_index_in_C;iter<S_array.size();iter++)
         {
+
+            // if (S_array[iter].gamma<S_best.s_revenue*(1.0-eps)/(6.0*B))
+            //     continue;
+
             for(auto &S_g:S_array[iter].spair)
             {
                 //c(S \cup e)>B
@@ -216,6 +223,7 @@ Result MultiStream(double B,double eps)
     }
 
     S_best.s_revenue=S_best.f_S();
+
 
     //
     // cout<<"S*:"<<endl;

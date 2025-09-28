@@ -5,8 +5,7 @@
 #ifndef ONESTREAM_H
 #define ONESTREAM_H
 #include "utilityfunction.h"
-//#include <ranges>
-#include "Offline.h"
+#include <ranges>
 class Si {
     public:
     double sum_cost;
@@ -22,7 +21,7 @@ class Si {
 double theta=1.0/1;
 Result OneStream(double B,double eps) {
     // cout<<"Theta:"<<theta<<endl;
-    int h=ceil(log2(1.0/2.0/eps))+2;
+    int h=log2(1.0/8.0/eps)+2;
 
     cout<<"OneStream ---------start--------- "<<endl;
     cout<<"B = "<<B<<endl;
@@ -44,14 +43,12 @@ Result OneStream(double B,double eps) {
             continue;
 
         //get e_star
-        // double fe_value=f_u(e);
-        // query++;
-        // if(fe_value>e_star_value) {
-        //     e_star_value=fe_value;
-        //     e_star=e;
-        // }
-
-
+        double fe_value=f_u(e);
+        query++;
+        if(fe_value>e_star_value) {
+            e_star_value=fe_value;
+            e_star=e;
+        }
         //check marginal gain
         double marginal=T.marginal_gain(e);
         query++;
@@ -90,19 +87,27 @@ Result OneStream(double B,double eps) {
 
     S_class Q;
     if(T.s_cost<=B) {
-       // cout<<"Budget is not full !"<<endl;
+        // cout<<"Budget is not full !"<<endl;
         Q=T;
     }
     else {
-        //we must access S_array to use vector since T store element using unorder_set
+        //we must access S_array for using vector as T store element using unorder_set
         // bool quit=false;
-        vector<int> Sij_final;
         for(int it=i;it>=j;it--) {
+            // if(quit) break;
             for (auto node = S_array[it].set.rbegin(); node != S_array[it].set.rend(); ++node) {
-                Sij_final.emplace_back(*node);
+                if(Q.s_cost+Groundset[*node].cost<=B) {
+                    Q.add_element(0.0,*node);
+                }
+                /*******add more elements than designed without quit is not a bad thing*********/
+                // else {
+                //     Q.s_revenue=Q.f_S();
+                //     quit=true;
+                //     break;
+                // }
             }
         }
-        Q=Offline(B,eps,Sij_final,query);
+        Q.s_revenue=Q.f_S();
     }
     if(e_star_value>Q.s_revenue)
         Q.replace_with_singleton(e_star);
@@ -138,18 +143,13 @@ pair<S_class,double> OneStreamForMulti(double B,double eps,int h, long long int 
     int j=1;
     S_class T;
     for(int e=0;e<node_num;e++) {
-        if(!budget_feasible_single(e,B))
-            continue;
-
         //get e_star
-        // double fe_value=f_u(e);
-        // query++;
-        // if(fe_value>e_star_value) {
-        //     e_star_value=fe_value;
-        //     e_star=e;
-        // }
-
-
+        double fe_value=f_u(e);
+        query++;
+        if(fe_value>e_star_value) {
+            e_star_value=fe_value;
+            e_star=e;
+        }
         //check marginal gain
         double marginal=T.marginal_gain(e);
         query++;
@@ -225,4 +225,3 @@ pair<S_class,double> OneStreamForMulti(double B,double eps,int h, long long int 
     return make_pair(Q,T.s_revenue);
 }
 #endif //ONESTREAM_H
-
