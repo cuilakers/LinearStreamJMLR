@@ -2,7 +2,8 @@
 #ifndef REV_UTILITY_H
 #define REV_UTILITY_H
 
-#include "generate_random_data.h"
+#include <iostream>
+#include <fstream>
 #include <vector>
 #include "list"
 #include "time.h"
@@ -15,6 +16,7 @@
 #include "random"
 int node_num=0;
 int edge_num=0;
+using namespace std;
 
 vector<double> all_e_value;
 vector<double> node_cost;
@@ -132,6 +134,23 @@ double f_u(int node)
     }
     return sum_value;
 }
+double f_S(const unordered_set<int> &solution) {
+    double sum_value = 0.0;
+    for (int i = 0; i < node_num; i++) {
+        double value = 0.0;
+        if(solution.count(i))
+            continue;
+        for (const auto &it:edge_weight[i]) {
+            if(solution.count(it.first)) {
+                value += it.second;
+            }
+        }
+        sum_value += sqrt(value);
+    }
+    return sum_value;
+}
+
+
 bool budget_feasible_single(const int &node_id,const double &budget)
 {
     if(Groundset[node_id].cost<=budget)
@@ -183,6 +202,11 @@ public:
         solution.emplace(node_id);
     }
     void add_set_element_without_cal_revenue(const vector<int> &set)
+    {
+        for(auto &v:set)
+            add_element_without_cal_revenue(v);
+    }
+    void add_set_element_without_cal_revenue(const unordered_set<int> &set)
     {
         for(auto &v:set)
             add_element_without_cal_revenue(v);

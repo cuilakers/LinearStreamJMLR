@@ -6,6 +6,7 @@
 #define KNAPSTREAM_H
 #include "utilityfunction.h"
 #include "MultiStream.h"
+#include "Offline.h"
 class S_array
 {
 public:

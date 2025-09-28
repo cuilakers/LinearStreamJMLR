@@ -5,8 +5,7 @@
 #ifndef ONESTREAM_H
 #define ONESTREAM_H
 #include "utilityfunction.h"
-//#include <ranges>
-#include "Offline.h"
+#include <ranges>
 class Si {
     public:
     double sum_cost;
@@ -20,13 +19,11 @@ class Si {
     }
 };
 double theta=1.0/1.0;
-//2 is great
 default_random_engine engine(2);
-/*Result OneStream(double B,double eps) {
+Result OneStream(double B,double eps) {
     bernoulli_distribution bernou(0.5);
 
-    cout<<"Theta:"<<theta<<endl;
-    int h=log2(1.0/32.0/eps)+1;
+    int h=2;
 
     cout<<"OneStream ---------start--------- "<<endl;
     cout<<"B = "<<B<<endl;
@@ -36,121 +33,7 @@ default_random_engine engine(2);
     int e_star=-1;
     double e_star_value=-999.0;
 
-    cout<<"h = "<<h<<endl;
-    vector<Si> S_array;
-    S_array.emplace_back();
-    S_array.emplace_back();
-    int i=1;
-    int j=1;
-    S_class T;
-    for(int e=0;e<node_num;e++) {
-        if (bernou(engine))
-            continue;
-
-        if(!budget_feasible_single(e,B))
-            continue;
-
-         //get e_star
-         double fe_value=f_u(e);
-         query++;
-         if(fe_value>e_star_value) {
-             e_star_value=fe_value;
-             e_star=e;
-         }
-
-
-        //check marginal gain
-        double marginal=T.marginal_gain(e);
-        query++;
-        if(marginal/Groundset[e].cost>=theta*T.s_revenue/B) {
-            S_array[i].add_element(e);
-
-            T.add_element(marginal,e);
-
-            if(S_array[i].sum_cost>=B) {
-
-                memory=max(memory,(long long int)T.solution.size());
-
-                //delete sets
-                if(i-j+1>=2*h) {
-                    j=j+h;
-                    //re-construct T
-                    T.clear();
-                    for(int it=j;it<=i;it++) {
-                        T.add_set_element_without_cal_revenue(S_array[it].set);
-                    }
-                    T.s_revenue=T.f_S();
-                }
-                i++;
-                S_array.emplace_back();
-            }
-
-        }
-    }
-
-    cout<<"T cost: "<<T.s_cost<<endl;
-    cout<<"T node"<<endl;
-    for(const auto &p:T.solution)
-        cout<<p<<" ";
-    cout<<endl;
-    memory=max(memory,(long long int)T.solution.size());
-
-    S_class Q;
-    if(T.s_cost<=B) {
-        cout<<"Budget is not full !"<<endl;
-        Q=T;
-    }
-    else {
-        //we must access S_array for using vector as T store element using unorder_set
-        // bool quit=false;
-        for(int it=i;it>=j;it--) {
-            // if(quit) break;
-            for (auto node = S_array[it].set.rbegin(); node != S_array[it].set.rend(); ++node) {
-                if(Q.s_cost+Groundset[*node].cost<=B) {
-                    Q.add_element(0.0,*node);
-                }
-                /*******add more elements than designed without quit is not a bad thing********#1#
-                // else {
-                //     Q.s_revenue=Q.f_S();
-                //     quit=true;
-                //     break;
-                // }
-            }
-        }
-        Q.s_revenue=Q.f_S();
-    }
-    if(e_star_value>Q.s_revenue)
-        Q.replace_with_singleton(e_star);
-
-
-    cout<<"S*:"<<endl;
-    cout << "  revenue: " << Q.s_revenue << " cost: " <<Q.s_cost << " size: " << Q.solution.size() << endl;
-    cout<<" node"<<endl;
-    for(const auto &p:Q.solution)
-        cout<<p<<" ";
-    cout<<endl;
-    cout<<"Real Revenue: "<<Q.f_S()<<endl;
-    cout<<"Query: "<<query<<endl;
-    cout<<"Memory: "<<memory<<endl;
-
-    cout<<"OneStream ---------end--------- "<<endl<<endl;
-    return Result(Q.s_revenue, Q.s_cost, Q.solution.size(), query,memory);
-}*/
-Result OneStreamOffline(double B,double eps) {
-    bernoulli_distribution bernou(0.5);
-
- //   cout<<"Theta:"<<theta<<endl;
-    int h=ceil(log2(1.0/16.0/eps))+2;
-
-    cout<<"OneStream ---------start--------- "<<endl;
-    cout<<"B = "<<B<<endl;
-
-    long long int query=0;
-    long long int memory=0;
-    int e_star=-1;
-    double e_star_value=-999.0;
-
- //   cout<<"h = "<<h<<endl;
+    // cout<<"h = "<<h<<endl;
     vector<Si> S_array;
     S_array.emplace_back();
     S_array.emplace_back();
@@ -213,20 +96,42 @@ Result OneStreamOffline(double B,double eps) {
 
     S_class Q;
     if(T.s_cost<=B) {
-        //cout<<"Budget is not full !"<<endl;
+        // cout<<"Budget is not full !"<<endl;
         Q=T;
     }
     else {
         //we must access S_array to use vector since T store element using unorder_set
         // bool quit=false;
-      //  cout<<"Offline is called !"<<endl;
-        vector<int> Sij_final;
-        for(int it=i;it>=j;it--) {
-            for (auto node = S_array[it].set.rbegin(); node != S_array[it].set.rend(); ++node) {
-                Sij_final.emplace_back(*node);
+        // cout<<"Budget is full !"<<endl;
+        Q.add_set_element_without_cal_revenue(S_array[i].set);
+        Q.s_revenue=Q.f_S();
+        query++;
+
+        for(int it=i-1;it>=j;it--) {
+            if (S_array[it].sum_cost<=B) {
+                unordered_set<int> temp_solution(S_array[it].set.begin(),S_array[it].set.end());
+                double temp_value=f_S(temp_solution);
+                if (temp_value>Q.s_revenue) {
+                    Q.clear();
+                    Q.add_set_element_without_cal_revenue(temp_solution);
+                    Q.s_revenue=Q.f_S();
+                }
             }
+            else {
+                unordered_set<int> temp_solution(S_array[it].set.begin(),S_array[it].set.end()-1);
+                double temp_value=f_S(temp_solution);
+                if (temp_value>Q.s_revenue) {
+                    Q.clear();
+                    Q.add_set_element_without_cal_revenue(temp_solution);
+                    Q.s_revenue=Q.f_S();
+                }
+
+                if (f_u(S_array[it].set.back())>Q.s_revenue) {
+                    Q.replace_with_singleton(S_array[it].set.back());
+                }
+            }
+
         }
-        Q=Offline(B,eps,Sij_final,query);
     }
     if(e_star_value>Q.s_revenue)
         Q.replace_with_singleton(e_star);
@@ -267,12 +172,14 @@ S_class OneStreamForMulti(double B,double eps,int h, long long int &query,long l
             continue;
 
         //get e_star
-        double fe_value=f_u(e);
-        query++;
-        if(fe_value>e_star_value) {
-            e_star_value=fe_value;
-            e_star=e;
-        }
+        // double fe_value=f_u(e);
+        // query++;
+        // if(fe_value>e_star_value) {
+        //     e_star_value=fe_value;
+        //     e_star=e;
+        // }
+
+
         //check marginal gain
         double marginal=T.marginal_gain(e);
         query++;
@@ -317,13 +224,36 @@ S_class OneStreamForMulti(double B,double eps,int h, long long int &query,long l
     else {
         //we must access S_array to use vector since T store element using unorder_set
         // bool quit=false;
-        vector<int> Sij_final;
-        for(int it=i;it>=j;it--) {
-            for (auto node = S_array[it].set.rbegin(); node != S_array[it].set.rend(); ++node) {
-                Sij_final.emplace_back(*node);
+        //cout<<"Budget is full !"<<endl;
+        Q.add_set_element_without_cal_revenue(S_array[i].set);
+        Q.s_revenue=Q.f_S();
+        query++;
+
+        for(int it=i-1;it>=j;it--) {
+            if (S_array[it].sum_cost<=B) {
+                unordered_set<int> temp_solution(S_array[it].set.begin(),S_array[it].set.end());
+                double temp_value=f_S(temp_solution);
+                if (temp_value>Q.s_revenue) {
+                    Q.clear();
+                    Q.add_set_element_without_cal_revenue(temp_solution);
+                    Q.s_revenue=Q.f_S();
+                }
             }
+            else {
+                unordered_set<int> temp_solution(S_array[it].set.begin(),S_array[it].set.end()-1);
+                double temp_value=f_S(temp_solution);
+                if (temp_value>Q.s_revenue) {
+                    Q.clear();
+                    Q.add_set_element_without_cal_revenue(temp_solution);
+                    Q.s_revenue=Q.f_S();
+                }
+
+                if (f_u(S_array[it].set.back())>Q.s_revenue) {
+                    Q.replace_with_singleton(S_array[it].set.back());
+                }
+            }
+
         }
-        Q=Offline(B,eps,Sij_final,query);
     }
 
     if(e_star_value>Q.s_revenue)

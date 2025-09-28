@@ -10,14 +10,15 @@
 Result MultiStream(double B,double eps)
 {
     //eps=0.2;
+
+
     long long int query=0;
     long long int memory=0;
-    int h=5;
+    int h=2;
 
-    double alpha=1.0/(4*(4+eps)*(2+1/(pow(2,h-1)-1)))/100.0;
-
-    int ell=(log(1.0/eps)-alpha)/(alpha*99);
-    //cout<<ell<<endl;
+    double alpha=0.0001;
+    int ell = (log(1.0/eps) * (1.0 - alpha)) / (1.0/72.0 - alpha);
+    // cout<<ell<<endl;
 
     S_class M;
     for(int i=0;i<ell;i++) {
@@ -71,7 +72,6 @@ Result MultiStream(double B,double eps)
 
         double left_temp=(1.0 - eps)* S_best.s_revenue / ( 6.0*B);
 
-        // double right_temp=(1.0+1.0/(pow(2,h-1)-1.0)) * T_value / (eps * B );
         double right_temp=M.s_revenue / (6.0*eps * B *alpha);
 
         double right_temp_element=fu_value/Groundset[u].cost;
@@ -123,7 +123,7 @@ Result MultiStream(double B,double eps)
             }
             else//else find where is the min gamma index now, is equivalent to remove all S gamma < left
             {
-                bool need_update= true;//judge S_array shouble be updated or not
+                bool need_update= true;//judge S_array should be updated or not
                 for (int iter = min_gamma_index_in_C; iter < S_array.size(); iter++)
                 {
                     if (S_array[iter].gamma < now_min_gamma_in_C)
@@ -153,6 +153,9 @@ Result MultiStream(double B,double eps)
         //foreach gamma\in C
         for(int iter=min_gamma_index_in_C;iter<=max_gamma_index_in_C;iter++)
         {
+            if (fu_value/Groundset[u].cost < S_array[iter].gamma)
+                continue;
+
             int max_solution=-1;
             double max_marginal=-999.0;
             for (int x = 0; x < solution_num; ++x) {
@@ -180,13 +183,18 @@ Result MultiStream(double B,double eps)
             }
         }
     }
-    // cout<<"S_array.size(): "<<S_array.size()<<endl;
+
+
     //second pass
     for(int e=0;e<node_num;e++)
     {
         //foreach S^gamma
         for(int iter=min_gamma_index_in_C;iter<S_array.size();iter++)
         {
+            if (S_array[iter].gamma<S_best.s_revenue*(1.0-eps)/(6.0*B))
+                continue;
+            //We must have f(O)/(6B)\geq f(L^*)/(6B)
+
             for(auto &S_g:S_array[iter].spair)
             {
                 //c(S \cup e)>B
@@ -211,6 +219,7 @@ Result MultiStream(double B,double eps)
     }
     memory/=node_num;
 
+
     // foreach S^gamma to boost the best solution
      for(int iter=min_gamma_index_in_C;iter<S_array.size();iter++)
      {
@@ -229,25 +238,7 @@ Result MultiStream(double B,double eps)
              }
          }
      }
-    //S_best.s_revenue=S_best.f_S();
 
-    /********call an offline algorithm to boost the objective function value***********/
-    /*
-    unordered_set<int> temp_groundset;
-    for(int iter=min_gamma_index_in_C;iter<S_array.size();iter++)
-    {
-        for(auto &S_g:S_array[iter].spair)
-        {
-            for(auto &e:S_g.solution) {
-                temp_groundset.emplace(e);
-            }
-        }
-    }
-    vector<int> offline_ground(temp_groundset.begin(), temp_groundset.end());
-    S_class temp_S=Offline(B,eps,offline_ground,query);
-    if (temp_S.s_revenue>S_best.s_revenue)
-        S_best=temp_S;
-        */
 
 
     // cout<<"S*:"<<endl;

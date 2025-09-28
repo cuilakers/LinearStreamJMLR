@@ -40,6 +40,10 @@ int main(int argc,char *argv[]) {
     vector<Result> smkstream_result;
     vector<Result> knapstream_result;
 
+    vector<Result> DMRT_result;
+    vector<Result> multiplexgreedy_result;
+    vector<Result> matknapstream_result;
+
     double B_start=50.0;
     double B_end=500.0;
     double B_step=45.0;
@@ -47,7 +51,7 @@ int main(int argc,char *argv[]) {
         int repeat_times=10;
         Result total_result_one(0, 0, 0);
         for (int i = 0; i < repeat_times; ++i) {
-            Result current_result = OneStreamOffline(B, eps);
+            Result current_result = OneStream(B, eps);
             total_result_one = total_result_one + current_result;
         }
         Result average_result_one = total_result_one / repeat_times;
@@ -61,10 +65,9 @@ int main(int argc,char *argv[]) {
         Result average_result_multi = total_result_multi / repeat_times;
         multistream_result.push_back(average_result_multi);
 
-        //onestream_result.emplace_back(OneStreamOffline(B,eps));
-       // multistream_result.emplace_back(MultiStream(B,eps));
-          smkstream_result.emplace_back(SmkStream(B,eps));
-          knapstream_result.emplace_back(KnapsackStreaming(B,eps));
+        smkstream_result.emplace_back(SmkStream(B,eps));
+        knapstream_result.emplace_back(KnapsackStreaming(B,eps));
+
     }
 
 
@@ -77,7 +80,7 @@ int main(int argc,char *argv[]) {
     }
     out<<endl;
 
-   out<<"OneStream "<<endl;
+    out<<"OneStream "<<endl;
     out<<"utility: "<<endl;
     for(auto p:onestream_result)
     {
