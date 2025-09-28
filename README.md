@@ -1,4 +1,4 @@
-> Code of the experiments for **Practical and Linear-Time Algorithms for Representative Subset Selection From Data Streams** submitted to TKDE.
+> Code of the experiments for **Practical and Linear-Time Algorithms for Streaming Submodular Maximization with Knapsack Constraints** submitted to JMLR.
 
 ## Application: Maximum Coverage on Networks
 
